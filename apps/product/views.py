@@ -1,44 +1,46 @@
-from django.shortcuts import render , get_object_or_404
-from rest_framework.decorators import api_view
+from django.shortcuts import render, get_object_or_404
+from rest_framework import status
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from .models import Product,Category
+from .models import Product, Category, Like, WishList
 from .serializers import ProductSerializer, CategorySerializer
 from .filters import ProductFilter
 from rest_framework.pagination import PageNumberPagination
+
+
 # Create your views here.
 
 @api_view(['GET'])
 def get_products(request):
-    filter_set= ProductFilter(request.GET,queryset=Product.objects.all().order_by('id'))
-    count = filter_set.qs.count()
-    resPage=1
-    pages_count=count/resPage
-    paginator = PageNumberPagination()
-    paginator.page_size=resPage
+    """ Get All Products """
+    filter_set = ProductFilter(request.GET, queryset=Product.objects.all().order_by('id'))
+    count = filter_set.qs.count()  # items count
+    res_page = 4  # items count per page
+    pages_count = count / res_page  # pages count
+    paginator = PageNumberPagination()  # pagination
+    paginator.page_size = res_page  # set items per page count
+    query_set = paginator.paginate_queryset(filter_set.qs, request)
+    serializer = ProductSerializer(query_set, many=True, context={'request': request})
+    return Response({"products": serializer.data, "pages": int(pages_count)})
 
-    query_set= paginator.paginate_queryset(filter_set.qs,request)
-
-    for product in query_set:
-        product.liked = Like.objects.filter(user=user, product=product).exists()
-        product.wishlisted = Wishlist.objects.filter(user=user, product=product).exists()
-
-    serializer = ProductSerializer(query_set,many=True,context={'request': request})
-    return Response({"products":serializer.data,"pages":int(pages_count)})
 
 @api_view(['GET'])
-def get_product_by_id(request,id):
-    product = get_object_or_404(Product,id=id)
-    serializer = ProductSerializer(product,many=False)
-    return Response({"products":serializer.data})
+def get_product_by_id(request, product_id):
+    product = get_object_or_404(Product, id=product_id)
+    serializer = ProductSerializer(product, many=False, context={'request': request})
+    return Response({"products": serializer.data})
+
 
 @api_view(['GET'])
 def get_categories(request):
     categories = Category.objects.all()
-    serializer = CategorySerializer(categories,many=True)
-    return Response({"categories":serializer.data})
+    serializer = CategorySerializer(categories, many=True)
+    return Response({"categories": serializer.data})
 
 
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def like_product(request, product_id):
     product = Product.objects.get(id=product_id)
     user = request.user
@@ -49,7 +51,9 @@ def like_product(request, product_id):
     Like.objects.create(user=user, product=product)
     return Response({'detail': 'Product liked successfully.'}, status=status.HTTP_201_CREATED)
 
+
 @api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
 def unlike_product(request, product_id):
     product = Product.objects.get(id=product_id)
     user = request.user
@@ -61,33 +65,52 @@ def unlike_product(request, product_id):
     except Like.DoesNotExist:
         return Response({'detail': 'You have not liked this product yet.'}, status=status.HTTP_400_BAD_REQUEST)
 
+
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def add_to_wishlist(request, product_id):
     product = Product.objects.get(id=product_id)
     user = request.user
 
-    if Wishlist.objects.filter(user=user, product=product).exists():
+    if WishList.objects.filter(user=user, product=product).exists():
         return Response({'detail': 'This product is already in your wishlist.'}, status=status.HTTP_400_BAD_REQUEST)
 
-    Wishlist.objects.create(user=user, product=product)
+    WishList.objects.create(user=user, product=product)
     return Response({'detail': 'Product added to wishlist successfully.'}, status=status.HTTP_201_CREATED)
 
+
 @api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
 def remove_from_wishlist(request, product_id):
     product = Product.objects.get(id=product_id)
     user = request.user
 
     try:
-        wishlist_item = Wishlist.objects.get(user=user, product=product)
+        wishlist_item = WishList.objects.get(user=user, product=product)
         wishlist_item.delete()
         return Response({'detail': 'Product removed from wishlist successfully.'}, status=status.HTTP_204_NO_CONTENT)
-    except Wishlist.DoesNotExist:
+    except WishList.DoesNotExist:
         return Response({'detail': 'This product is not in your wishlist.'}, status=status.HTTP_400_BAD_REQUEST)
 
+
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def get_wishlist(request):
     user = request.user
-    wishlist_items = Wishlist.objects.filter(user=user)
+    wishlist_items = WishList.objects.filter(user=user)
     products = [item.product for item in wishlist_items]
-    serializer = ProductSerializer(products, many=True)
+    serializer = ProductSerializer(products, many=True, context={'request': request})
     return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_product(request):
+    data = request.data
+    serializer = ProductSerializer(data=data)
+    if serializer.is_valid():
+        product = Product.objects.create(**data)
+        res = ProductSerializer(product, many=False)
+        return Response({"message": res.data}, status=status.HTTP_200_OK)
+    else:
+        return Response({"message": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
