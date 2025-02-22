@@ -7,13 +7,15 @@ from .models import User, OTP
 from .serializers import UserSerializer, OTPSerializer, CustomerSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 import random
+
+
 # Create your views here.
 class SendOTPView(APIView):
     def post(self, request):
         email = request.data.get('email')
         otp_code = str(random.randint(100000, 999999))
         OTP.objects.create(email=email, otp_code=otp_code)
-        
+
         send_mail(
             'Your OTP Code',
             f'Your OTP code is {otp_code}',
@@ -21,6 +23,7 @@ class SendOTPView(APIView):
             [email],
         )
         return Response({'message': 'OTP sent'}, status=status.HTTP_200_OK)
+
 
 class VerifyOTPView(APIView):
     def post(self, request):
@@ -30,18 +33,26 @@ class VerifyOTPView(APIView):
         if otp and otp.is_valid:
             otp.is_valid = False
             otp.save()
-            serializer = UserSerializer(data=request.data)
-            if serializer.is_valid():
-                user = serializer.save()
-                refresh = RefreshToken.for_user(user)
+            exist_user = User.objects.filter(email=email).first()
+            if exist_user is None:
+                serializer = UserSerializer(data=request.data)
+                if serializer.is_valid():
+                    user = serializer.save()
+                    refresh = RefreshToken.for_user(user)
+                    return Response({
+                        'message': 'User registered',
+                        'refresh': str(refresh),
+                        'access': str(refresh.access_token),
+                    }, status=status.HTTP_201_CREATED)
+                else:
+                    return Response({'message': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                refresh = RefreshToken.for_user(exist_user)
                 return Response({
                     'message': 'User registered',
                     'refresh': str(refresh),
                     'access': str(refresh.access_token),
                 }, status=status.HTTP_201_CREATED)
-            else:
-                return Response({'message': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
-            return Response({'message': 'OTP verified'}, status=status.HTTP_200_OK)
         else:
             return Response({'message': 'Invalid OTP'}, status=status.HTTP_400_BAD_REQUEST)
 
