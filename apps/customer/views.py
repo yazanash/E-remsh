@@ -7,6 +7,7 @@ from .models import User, OTP
 from .serializers import UserSerializer, OTPSerializer, CustomerSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 import random
+from rest_framework.permissions import IsAuthenticated
 
 
 # Create your views here.
@@ -58,10 +59,12 @@ class VerifyOTPView(APIView):
 
 
 class UserProfileView(APIView):
+    permission_classes = [IsAuthenticated]
+
     def post(self, request):
         serializer = CustomerSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save()
+            serializer.save(user=request.user)
             return Response({'message': 'Profile created'}, status=status.HTTP_201_CREATED)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

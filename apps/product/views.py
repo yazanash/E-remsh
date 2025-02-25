@@ -114,3 +114,27 @@ def create_product(request):
         return Response({"message": res.data}, status=status.HTTP_200_OK)
     else:
         return Response({"message": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(["POST"])
+def check_products(request):
+    data = request.data
+    items = data.get('items', [])
+    if not items:
+        return Response({"error": "no items received"}, status=status.HTTP_400_BAD_REQUEST)
+    products_ids = []
+    products = []
+    for item in items:
+        try:
+            product = Product.objects.get(id=item['product'])
+            products.append(product)
+        except Product.DoesNotExist:
+            products_ids.append(item['product'])
+
+    serializer = ProductSerializer(products, many=True, context={'request': request})
+    message = ""
+    if len(products_ids) > 0:
+        message = "there is missing products"
+        return Response({"products": serializer.data, "message": message}, status=status.HTTP_400_BAD_REQUEST)
+    message = "all products validated"
+    return Response({"products": serializer.data, "message": message}, status=status.HTTP_200_OK)

@@ -1,5 +1,10 @@
+import random
+import string
+
 from django.db import models
 from django.contrib.auth.models import AbstractUser, Group, Permission
+
+
 # Create your models here.
 
 
@@ -7,29 +12,39 @@ class User(AbstractUser):
     email = models.EmailField(unique=True)
     groups = models.ManyToManyField(
         Group,
-        related_name='custom_user_groups'  # Unique related_name for your custom model
+        related_name='user_groups'  # Unique related_name for your custom model
     )
     user_permissions = models.ManyToManyField(
         Permission,
-        related_name='custom_user_permissions'  # Unique related_name for your custom model
+        related_name='user_permissions'  # Unique related_name for your custom model
     )
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['username']
+
+    def save(self, *args, **kwargs):
+        if not self.username:
+            self.username = self.email.split('@')[0]
+        if not self.password:
+            self.set_password(''.join(random.choices(string.ascii_letters + string.digits, k=8)))
+        super().save(*args, **kwargs)
+
 
 class OTP(models.Model):
-    email = models.EmailField( max_length=254)
+    email = models.EmailField(max_length=254)
     otp_code = models.CharField(max_length=6)
     created_at = models.DateTimeField(auto_now_add=True)
     is_valid = models.BooleanField(default=True)
 
     def __str__(self):
-        return f'{self.otp_code} for {self.user.email}'
+        return f'{self.otp_code} for {self.email}'
+
 
 class Customer(models.Model):
     name = models.CharField(max_length=100)
     gender = models.CharField(max_length=10)
-    phonenumber = models.CharField(max_length=20)
+    phone = models.CharField(max_length=20)
     birthdate = models.DateField()
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
 
     def __str__(self):
         return self.name
-
