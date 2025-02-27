@@ -5,7 +5,6 @@
         <h1 class="mt-5">Create Product</h1>
         <form method="post" enctype="multipart/form-data">
             {% csrf_token %}
-<!--            {{ form.as_p }}-->
             <div class="mb-3">
               <label for="exampleFormControlInput1" class="form-label">Product name</label>
               <input type="text" class="form-control" name="name" id="exampleFormControlInput1" placeholder="product name">
