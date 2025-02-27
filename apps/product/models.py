@@ -1,3 +1,5 @@
+import json
+
 from django.db import models
 from apps.customer.models import User
 from apps.customer.models import Customer
@@ -20,6 +22,12 @@ class Product(models.Model):
     offer = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     thumbnail = models.ImageField(upload_to='thumbnails/')
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
+
+    def save(self, *args, **kwargs):
+        # Parse colors field if it's a string (from form input)
+        if isinstance(self.colors, str):
+            self.colors = json.loads(self.colors)
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name

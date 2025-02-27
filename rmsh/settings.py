@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'apps.customer',
     'apps.order',
     'apps.product',
+    'apps.dashboard',
     'django_filters',
 ]
 
@@ -54,7 +55,8 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'rmsh.urls'
-
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/login/'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',

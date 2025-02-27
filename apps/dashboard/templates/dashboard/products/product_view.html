@@ -1,0 +1,19 @@
+{% extends "dashboard/base.html" %}
+
+{% block content %}
+<h1>Product List</h1>
+    {% for product in products %}
+        <h2>{{ product.name }}</h2>
+        <p>{{ product.description }}</p>
+        <ul>
+            {% for color in product.colors %}
+                <li>{{ color.color_code }}: {{ color.sizes|join:", " }}</li>
+            {% endfor %}
+        </ul>
+        <p>Price: {{ product.price }}</p>
+        <p>Offer: {{ product.offer }}</p>
+        <img src="{{ product.thumbnail.url }}" alt="{{ product.name }}">
+        <p>Category: {{ product.category.name }}</p>
+    {% endfor %}
+
+{% endblock %}
