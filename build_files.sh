@@ -1,6 +1,6 @@
 #!/bin/bash
 python3.9 -m venv venv
-source venv/bin/activate
+source /vercel/path0/venv/bin/activatevenv/bin/activate
 
 if ! command -v pip &> /dev/null; then
     curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py

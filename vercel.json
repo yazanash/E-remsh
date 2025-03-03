@@ -24,7 +24,7 @@
     },
     {
       "src": "/(.*)",
-      "dest": "<projectname>/wsgi.py"
+      "dest": "rmsh/wsgi.py"
     }
   ]
 }
