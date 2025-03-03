@@ -42,9 +42,11 @@ def create_product(request):
         if form.is_valid():
             form.save()
             return redirect('products_list')
+        else:
+            print(form.errors)
     else:
         form = ProductForm()
-    return render(request, 'dashboard/products/add_product.html', {'form': form,'categories': categories})
+    return render(request, 'dashboard/products/add_product.html', {'form': form, 'categories': categories})
 
 
 def list_product(request):
