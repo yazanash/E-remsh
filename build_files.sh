@@ -1,7 +1,6 @@
 #!/bin/bash
-
-python3 -m venv myenv
-source myenv/bin/activate
+python3.9 -m venv venv
+source venv/bin/activate
 
 if ! command -v pip &> /dev/null; then
     curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
