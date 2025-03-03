@@ -5,35 +5,45 @@
         <h1 class="mt-5">Create Product</h1>
         <form method="post" enctype="multipart/form-data">
             {% csrf_token %}
+               <div class="form-group mb-3">
+                <label for="thumbnail">Thumbnail:</label>
+                <input type="file" class="form-control-file" id="thumbnail" name="thumbnail" accept="image/*" style="display:none;">
+                <img id="thumbnail-preview" src="#" alt="Select an image" style="display: block; margin-top: 10px; max-width: 100px; cursor: pointer;" onclick="triggerFileUpload()">
+            </div>
+            <h4>Product info</h4>
+            <hr>
             <div class="mb-3">
               <label for="exampleFormControlInput1" class="form-label">Product name</label>
               <input type="text" class="form-control" name="name" id="exampleFormControlInput1" placeholder="product name">
             </div>
             <div class="mb-3">
+                <label for="c" class="form-label">Category </label>
+                 <select class="form-control mb-3" name="category" id="c" aria-label="Default select example">
+                      <option selected>Open this select menu</option>
+                        {% for category in categories %}
+                            <option value="{{ category.id }}">{{ category.name }}</option>
+                        {% endfor %}
+                </select>
+            </div>
+            <div class="mb-3">
               <label for="exampleFormControlTextarea1" class="form-label">Description</label>
               <textarea class="form-control" name="description" id="exampleFormControlTextarea1" rows="3"></textarea>
             </div>
+            <h4>Product Price and offer</h4>
+            <hr>
             <div class="mb-3">
               <label for="exampleFormControlInput3" class="form-label">Price</label>
-              <input type="number" class="form-control" name="name" id="exampleFormControlInput3" placeholder="25000">
+              <input type="number" class="form-control" name="price" id="exampleFormControlInput3" placeholder="25000">
             </div>
             <div class="mb-3">
               <label for="exampleFormControlInput4" class="form-label">Offer</label>
-              <input type="number" class="form-control" name="name" id="exampleFormControlInput4" placeholder="25000">
+              <input type="number" class="form-control" name="offer" id="exampleFormControlInput4" placeholder="25000">
             </div>
-            <select class="form-control mb-3" aria-label="Default select example">
-                  <option selected>Open this select menu</option>
-                    {% for category in categories %}
-                        <option value="{{ category.id }}">{{ category.name }}</option>
-                    {% endfor %}
-            </select>
 
-             <div class="form-group mb-3">
-                <label for="thumbnail">Thumbnail:</label>
-                <input type="file" class="form-control-file" id="thumbnail" name="thumbnail" accept="image/*" style="display:none;">
-                <img id="thumbnail-preview" src="#" alt="Select an image" style="display: block; margin-top: 10px; max-width: 100px; cursor: pointer;" onclick="triggerFileUpload()">
-            </div>
-            <div id="color-pickers"></div>
+
+            <h4>Product Sizes and colors</h4>
+            <hr>
+            <div class="mb-3 mx-5" id="color-pickers"></div>
             <button type="button" id="add-color-btn" class="btn btn-primary mt-3">Add Color</button>
             <button type="submit" class="btn btn-success mt-3">Save</button>
         </form>
@@ -63,36 +73,34 @@
                 colorPickerDiv.classList.add('form-group');
                 colorPickerDiv.classList.add('row');
                 colorPickerDiv.innerHTML = `
-                    <div class="input-group col-3 mb-3">
-<!--                        <div class="input-group-prepend">-->
-<!--                            <label class="input-group-text" for="colorPicker${colorIndex}">Color:</label>-->
-<!--                        </div>-->
-                        <input type="color" class="form-control" id="colorPicker${colorIndex}" name="colors[${colorIndex}][color_code]">
-                         <div id="sizes-div-${colorIndex}" class="form-group ml-3"></div>
+                    <div class="input-group mb-3">
+                        <input type="color" width="50" class="form-control col-1" id="colorPicker${colorIndex}" name="colors[${colorIndex}]">
                         <div class="input-group-append">
                             <button type="button" class="btn btn-outline-secondary" onclick="addSizeField(${colorIndex})">Add Size</button>
                         </div>
                     </div>
-
+                    <div id="sizes-div-${colorIndex}" class="form-group col row ml-3"></div>
                 `;
 
                 document.getElementById('color-pickers').appendChild(colorPickerDiv);
+
             }
 
             window.addSizeField = function (colorIndex) {
                 sizeIndex++;
                 const sizeDiv = document.createElement('div');
-                sizeDiv.classList.add('input-group', 'mb-3');
+                sizeDiv.classList.add('input-group', 'mb-3','col-2');
                 sizeDiv.innerHTML = `
-                    <div class="input-group-prepend mb-3">
-                        <label class="input-group-text" for="sizeInput${colorIndex}-${sizeIndex}">Size:</label>
-                    </div>
-                    <input type="text" class="form-control" id="sizeInput${colorIndex}-${sizeIndex}" name="colors[${colorIndex}][sizes][]">
-                `;
-                document.getElementById(`sizes-div-${colorIndex}`).appendChild(sizeDiv);
-            }
+                    <input type="text" placeholder="EX. S" class="form-control" id="sizeInput${colorIndex}-${sizeIndex}" name="colors[sizes]">
 
+                `;
+                 sizeDiv.focus()
+                document.getElementById(`sizes-div-${colorIndex}`).appendChild(sizeDiv);
+
+            }
+        addColorPicker()
             document.getElementById('add-color-btn').addEventListener('click', addColorPicker);
         });
+     addColorPicker()
     </script>
 {% endblock %}

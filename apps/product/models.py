@@ -16,21 +16,24 @@ class Category(models.Model):
 class Product(models.Model):
     name = models.CharField(max_length=200)
     description = models.TextField()
-    colors = models.JSONField(default=list)
-    sizes = models.JSONField(default=list)
+    colors = models.JSONField(default=dict)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     offer = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     thumbnail = models.ImageField(upload_to='thumbnails/')
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
 
-    def save(self, *args, **kwargs):
-        # Parse colors field if it's a string (from form input)
-        if isinstance(self.colors, str):
-            self.colors = json.loads(self.colors)
-        super().save(*args, **kwargs)
-
     def __str__(self):
         return self.name
+
+
+class ProductItems(models.Model):
+    product = models.ForeignKey(Product, related_name='product_items', on_delete=models.CASCADE)
+    color_code = models.CharField(max_length=7)
+    size_label = models.CharField(max_length=10)
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"{self.product.name} - {self.color_code} - {self.size_label}"
 
 
 class Like(models.Model):

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Product, Category, Like, WishList
+from .models import Product, Category, Like, WishList, ProductItems
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -16,7 +16,7 @@ class ProductSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        fields = ['id', 'name', 'description', 'colors', 'sizes', 'price', 'offer', 'thumbnail',
+        fields = ['id', 'name', 'description', 'price', 'offer', 'thumbnail',
                   'category', 'likes_count', 'liked', 'wishlisted']
 
     def get_liked(self, obj):
@@ -30,3 +30,9 @@ class ProductSerializer(serializers.ModelSerializer):
         if user.is_authenticated:
             return WishList.objects.filter(user=user, product=obj).exists()
         return False
+
+
+class ProductItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductItems
+        fields = ['product', 'color_code', 'size_label']

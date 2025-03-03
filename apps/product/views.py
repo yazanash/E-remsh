@@ -3,8 +3,8 @@ from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from .models import Product, Category, Like, WishList
-from .serializers import ProductSerializer, CategorySerializer
+from .models import Product, Category, Like, WishList, ProductItems
+from .serializers import ProductSerializer, CategorySerializer, ProductItemSerializer
 from .filters import ProductFilter
 from rest_framework.pagination import PageNumberPagination
 
@@ -29,7 +29,9 @@ def get_products(request):
 def get_product_by_id(request, product_id):
     product = get_object_or_404(Product, id=product_id)
     serializer = ProductSerializer(product, many=False, context={'request': request})
-    return Response({"products": serializer.data})
+    product_items = ProductItems.objects.filter(product=product)
+    items_serializer = ProductItemSerializer(product_items, many=True)
+    return Response({"product": serializer.data, "product_items": items_serializer.data})
 
 
 @api_view(['GET'])
@@ -114,27 +116,3 @@ def create_product(request):
         return Response({"message": res.data}, status=status.HTTP_200_OK)
     else:
         return Response({"message": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
-
-
-@api_view(["POST"])
-def check_products(request):
-    data = request.data
-    items = data.get('items', [])
-    if not items:
-        return Response({"error": "no items received"}, status=status.HTTP_400_BAD_REQUEST)
-    products_ids = []
-    products = []
-    for item in items:
-        try:
-            product = Product.objects.get(id=item['product'])
-            products.append(product)
-        except Product.DoesNotExist:
-            products_ids.append(item['product'])
-
-    serializer = ProductSerializer(products, many=True, context={'request': request})
-    message = ""
-    if len(products_ids) > 0:
-        message = "there is missing products"
-        return Response({"products": serializer.data, "message": message}, status=status.HTTP_400_BAD_REQUEST)
-    message = "all products validated"
-    return Response({"products": serializer.data, "message": message}, status=status.HTTP_200_OK)

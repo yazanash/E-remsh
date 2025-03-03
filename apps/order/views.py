@@ -9,7 +9,7 @@ from .models import Order, OrderItems, Coupon, DeliveryOffice
 from datetime import datetime, timezone
 
 from .serializers import OrderSerializer, DeliverySerializer
-from ..product.models import Product
+from ..product.models import Product, ProductItems
 
 
 # Create your views here.
@@ -83,7 +83,8 @@ def create_order(request):
     order_total = 0
     for item in order_items:
         try:
-            product = Product.objects.get(id=item['product'])
+            product_item = ProductItems.objects.get(id=item['product'])
+            product = product_item.product
         except Product.DoesNotExist:
             continue
         item_total = product.offer * item['quantity'] if product.offer != 0 else product.price * item['quantity']
@@ -93,8 +94,8 @@ def create_order(request):
             order=order,
             name=product.name,
             quantity=item['quantity'],
-            color=item.get('color', ''),
-            size=item.get('size', ''),
+            color=product_item.color_code,
+            size=product_item.size_label,
             price=product.price,
             offer=product.offer,
             has_offer=product.offer != 0,
