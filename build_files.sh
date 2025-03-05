@@ -1,7 +1,7 @@
 #!/bin/bash
 python3.9 -m venv venv
 source /vercel/path0/venv/bin/activate
-
+sudo apt-get install default-libmysqlclient-dev build-essential
 if ! command -v pip &> /dev/null; then
     curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
     python get-pip.py
