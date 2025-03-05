@@ -84,8 +84,14 @@ WSGI_APPLICATION = 'rmsh.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        # 'ENGINE': 'django.db.backends.sqlite3',
+        # 'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'defaultdb',
+        'USER': 'avnadmin',
+        'PASSWORD': 'AVNS_QIH7M_pb-HgvE7e2Ku7',
+        'HOST': 'mysql-3c2aca0b-yazan-aa24.g.aivencloud.com',
+        'PORT': '24480',
     }
 }
 
