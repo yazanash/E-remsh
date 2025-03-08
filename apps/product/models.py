@@ -16,7 +16,6 @@ class Category(models.Model):
 class Product(models.Model):
     name = models.CharField(max_length=200)
     description = models.TextField()
-    colors = models.JSONField(default=dict)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     offer = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     thumbnail = models.ImageField(upload_to='thumbnails/')
