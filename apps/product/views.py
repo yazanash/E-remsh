@@ -4,7 +4,8 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
-
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.exceptions import TokenError
 from .models import Product, Category, Like, WishList, ProductItems, Image
 from .serializers import ProductSerializer, CategorySerializer, ProductItemSerializer, ProductImageSerializer
 from .filters import ProductFilter
@@ -155,3 +156,24 @@ class ProductView(APIView):
             return Response({"data": res.data}, status=status.HTTP_200_OK)
         else:
             return Response({"message": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class RefreshRefreshTokenView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        # Extract the existing refresh token from the request
+        refresh_token = request.data.get('refresh')
+        if not refresh_token:
+            return Response({"message": "Refresh token is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            # Verify and blacklist the old refresh token
+            old_refresh = RefreshToken(refresh_token)
+            old_refresh.blacklist()  # Requires token blacklisting to be enabled
+
+            # Create a new refresh token
+            new_refresh = RefreshToken.for_user(request.user)
+            return Response({"refresh": str(new_refresh)}, status=status.HTTP_200_OK)
+        except TokenError as e:
+            return Response({"message": "Invalid or expired refresh token."}, status=status.HTTP_400_BAD_REQUEST)
