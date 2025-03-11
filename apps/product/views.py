@@ -113,15 +113,53 @@ def get_wishlist(request):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def create_product(request):
+def add_image(request):
     data = request.data
-    serializer = ProductSerializer(data=data)
+    product = get_object_or_404(Product,id=data['product'])
+    serializer = ProductImageSerializer(data=data,context={"request":request})
     if serializer.is_valid():
-        product = Product.objects.create(**data)
-        res = ProductSerializer(product, many=False)
-        return Response({"data": res.data}, status=status.HTTP_200_OK)
+        serializer.save(product=product)
+        return Response({"data": serializer.data}, status=status.HTTP_200_OK)
     else:
+        print(serializer.errors)
         return Response({"message": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def edit_image(request,image_id):
+    data = request.data
+    image = get_object_or_404(Image, id=image_id)
+    serializer = ProductImageSerializer(image, data=data, context={"request": request}, partial=True)
+    if serializer.is_valid():
+        serializer.save()
+        return Response({"data": serializer.data}, status=status.HTTP_200_OK)
+    else:
+        print(serializer.errors)
+        return Response({"message": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_image(request, image_id):
+    image = get_object_or_404(Image, id=image_id)
+    image.delete()
+    return Response({"message": "deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def add_item(request,product_id):
+    data = request.data
+    product = get_object_or_404(Product,id=product_id)
+    serializer = ProductItemSerializer(data=data)
+    if serializer.is_valid():
+        serializer.save(product=product)
+        return Response({"data": serializer.data}, status=status.HTTP_200_OK)
+    else:
+        print(serializer.errors)
+        return Response({"message": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 class ProductView(APIView):

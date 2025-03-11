@@ -72,5 +72,5 @@ class UserProfileView(APIView):
     def get(self, request):
         user = request.user
         customer = get_object_or_404(Customer, user=user)
-        serializer = CustomerSerializer(customer)
+        serializer = CustomerSerializer(customer,many=False)
         return Response({"data": serializer.data}, status=status.HTTP_200_OK)
