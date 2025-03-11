@@ -5,8 +5,13 @@ from .views import ProductView
 urlpatterns = [
     path('products/', ProductView.as_view(), name="products"),
     path('products/<str:product_id>/', views.get_product_by_id, name="products.get"),
+
+    path('products/<str:product_id>/items/add/', views.add_item, name="products.get"),
     # path('products/', views.create_product, name='create_products'),
     path('categories/', views.get_categories,name="categories"),
+    path('products/images/add/', views.add_image,name="add_image"),
+    path('products/images/edit/<str:image_id>/', views.edit_image, name="edit_image"),
+    path('products/images/delete/<str:image_id>/', views.delete_image, name="delete_image"),
 
 
     path('products/<str:product_id>/like/', views.like_product, name='like_product'),
