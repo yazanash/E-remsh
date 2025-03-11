@@ -1,15 +1,18 @@
 from rest_framework import serializers
-from .models import Product, Category, Like, WishList, ProductItems
+from .models import Product, Category, Like, WishList, ProductItems, Image
 
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
-        fields = ['name']
+        fields = ['id', 'name']
 
 
 class ProductSerializer(serializers.ModelSerializer):
-    category = serializers.CharField(source='category.name')
+    category = serializers.PrimaryKeyRelatedField(
+        queryset=Category.objects.all(), write_only=True
+    )
+    category_name = serializers.CharField(source='category.name', read_only=True)
     likes_count = serializers.IntegerField(source='like_set.count', read_only=True)
     liked = serializers.SerializerMethodField()
     wishlisted = serializers.SerializerMethodField()
@@ -17,7 +20,7 @@ class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = ['id', 'name', 'description', 'price', 'offer', 'thumbnail',
-                  'category', 'likes_count', 'liked', 'wishlisted']
+                  'category','category_name', 'likes_count', 'liked', 'wishlisted']
 
     def get_liked(self, obj):
         user = self.context['request'].user
@@ -36,3 +39,9 @@ class ProductItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductItems
         fields = ['product', 'color_code', 'size_label']
+
+
+class ProductImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Image
+        fields = ['image_url', 'id']

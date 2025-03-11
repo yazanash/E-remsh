@@ -1,10 +1,12 @@
 from django.shortcuts import render, get_object_or_404
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
-from .models import Product, Category, Like, WishList, ProductItems
-from .serializers import ProductSerializer, CategorySerializer, ProductItemSerializer
+from rest_framework.views import APIView
+
+from .models import Product, Category, Like, WishList, ProductItems, Image
+from .serializers import ProductSerializer, CategorySerializer, ProductItemSerializer, ProductImageSerializer
 from .filters import ProductFilter
 from rest_framework.pagination import PageNumberPagination
 
@@ -15,14 +17,12 @@ from rest_framework.pagination import PageNumberPagination
 def get_products(request):
     """ Get All Products """
     filter_set = ProductFilter(request.GET, queryset=Product.objects.all().order_by('id'))
-    count = filter_set.qs.count()  # items count
-    res_page = 4  # items count per page
-    pages_count = count / res_page  # pages count
+    res_page = 10  # items count per page
     paginator = PageNumberPagination()  # pagination
     paginator.page_size = res_page  # set items per page count
     query_set = paginator.paginate_queryset(filter_set.qs, request)
     serializer = ProductSerializer(query_set, many=True, context={'request': request})
-    return Response({"products": serializer.data, "pages": int(pages_count)})
+    return Response({"data": serializer.data}, status=status.HTTP_200_OK)
 
 
 @api_view(['GET'])
@@ -31,14 +31,19 @@ def get_product_by_id(request, product_id):
     serializer = ProductSerializer(product, many=False, context={'request': request})
     product_items = ProductItems.objects.filter(product=product)
     items_serializer = ProductItemSerializer(product_items, many=True)
-    return Response({"product": serializer.data, "product_items": items_serializer.data})
+    product_images = Image.objects.filter(product=product)
+    images_serializer = ProductImageSerializer(product_images, many=True)
+    return Response({"data": {"product_info": serializer.data,
+                              "product_items": items_serializer.data,
+                              "images": images_serializer.data}}, status=status.HTTP_200_OK)
 
 
 @api_view(['GET'])
 def get_categories(request):
     categories = Category.objects.all()
+    print(categories)
     serializer = CategorySerializer(categories, many=True)
-    return Response({"categories": serializer.data})
+    return Response({"data": serializer.data}, status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])
@@ -113,6 +118,40 @@ def create_product(request):
     if serializer.is_valid():
         product = Product.objects.create(**data)
         res = ProductSerializer(product, many=False)
-        return Response({"message": res.data}, status=status.HTTP_200_OK)
+        return Response({"data": res.data}, status=status.HTTP_200_OK)
     else:
         return Response({"message": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ProductView(APIView):
+    permission_classes = [AllowAny]
+
+    def get_permissions(self):
+        """
+        Dynamically assign permissions based on the HTTP method.
+        """
+        if self.request.method == 'POST':
+            return [IsAuthenticated()]  # Require authentication for POST requests
+        return [AllowAny()]  # Allow unrestricted access for GET requests
+
+    def get(self, request):
+        filter_set = ProductFilter(request.GET, queryset=Product.objects.all().order_by('id'))
+        res_page = 10  # items count per page
+        paginator = PageNumberPagination()  # pagination
+        paginator.page_size = res_page  # set items per page count
+        query_set = paginator.paginate_queryset(filter_set.qs, request)
+        serializer = ProductSerializer(query_set, many=True, context={'request': request})
+        return Response({"data": serializer.data}, status=status.HTTP_200_OK)
+
+    def post(self, request):
+        # Handle product creation
+        data = request.data
+        serializer = ProductSerializer(data=data)
+        category_id = data.get('category')
+        category = Category.objects.get(id=category_id)
+        if serializer.is_valid():
+            product = serializer.save(category=category)
+            res = ProductSerializer(product, many=False, context={'request': request})
+            return Response({"data": res.data}, status=status.HTTP_200_OK)
+        else:
+            return Response({"message": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
