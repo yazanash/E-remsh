@@ -33,9 +33,9 @@ def get_product_by_id(request, product_id):
     product_items = ProductItems.objects.filter(product=product)
     items_serializer = ProductItemSerializer(product_items, many=True)
     product_images = Image.objects.filter(product=product)
-    images_serializer = ProductImageSerializer(product_images, many=True)
-    return Response({"data": {"product_info": serializer.data,
-                              "product_items": items_serializer.data,
+    images_serializer = ProductImageSerializer(product_images, many=True, context={'request': request})
+    return Response({"data": {"info": serializer.data,
+                              "items": items_serializer.data,
                               "images": images_serializer.data}}, status=status.HTTP_200_OK)
 
 
