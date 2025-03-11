@@ -1,9 +1,9 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from django.core.mail import send_mail
-from .models import User, OTP
+from .models import User, OTP, Customer
 from .serializers import UserSerializer, OTPSerializer, CustomerSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 import random
@@ -68,3 +68,9 @@ class UserProfileView(APIView):
             return Response({'message': 'Profile created'}, status=status.HTTP_201_CREATED)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def get(self, request):
+        user = request.user
+        customer = get_object_or_404(Customer, user=user)
+        serializer = CustomerSerializer(customer)
+        return Response({"data": serializer.data}, status=status.HTTP_200_OK)

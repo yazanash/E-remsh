@@ -43,7 +43,7 @@ class Customer(models.Model):
     name = models.CharField(max_length=100)
     gender = models.CharField(max_length=10)
     phone = models.CharField(max_length=20)
-    birthdate = models.DateField()
+    birthdate = models.CharField(max_length=100)
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
 
     def __str__(self):

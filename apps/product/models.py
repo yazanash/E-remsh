@@ -27,8 +27,8 @@ class Product(models.Model):
 
 class ProductItems(models.Model):
     product = models.ForeignKey(Product, related_name='product_items', on_delete=models.CASCADE)
-    color_code = models.CharField(max_length=7)
-    size_label = models.CharField(max_length=10)
+    color = models.CharField(max_length=7)
+    size = models.CharField(max_length=10)
     is_active = models.BooleanField(default=True)
 
     def __str__(self):
