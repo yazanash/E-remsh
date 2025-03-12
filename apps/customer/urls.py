@@ -1,11 +1,9 @@
 from django.urls import path
-from .views import SendOTPView, VerifyOTPView, UserProfileView
+from .views import SendOTPView, VerifyOTPView, UserProfileView,RefreshRefreshTokenView
 from rest_framework_simplejwt.views import (
     TokenRefreshView,
     TokenVerifyView,
 )
-
-from ..product.views import RefreshRefreshTokenView
 
 urlpatterns = [
     path('customer/send-otp/', SendOTPView.as_view(), name='send_otp'),

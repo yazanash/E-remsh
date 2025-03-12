@@ -21,6 +21,9 @@ class ProductSerializer(serializers.ModelSerializer):
         model = Product
         fields = ['id', 'name', 'description', 'price', 'offer', 'thumbnail',
                   'category','category_name', 'likes_count', 'liked', 'wishlisted']
+        extra_kwargs = {
+            'thumbnail': {'required': False}  # Make 'thumbnail' optional
+        }
 
     def get_liked(self, obj):
         user = self.context['request'].user
