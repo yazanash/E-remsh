@@ -6,6 +6,7 @@ from django.core.mail import send_mail
 from .models import User, OTP, Customer
 from .serializers import UserSerializer, OTPSerializer, CustomerSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.exceptions import TokenError
 import random
 from rest_framework.permissions import IsAuthenticated
 
@@ -74,3 +75,24 @@ class UserProfileView(APIView):
         customer = get_object_or_404(Customer, user=user)
         serializer = CustomerSerializer(customer,many=False)
         return Response({"data": serializer.data}, status=status.HTTP_200_OK)
+
+
+class RefreshRefreshTokenView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        # Extract the existing refresh token from the request
+        refresh_token = request.data.get('refresh')
+        if not refresh_token:
+            return Response({"message": "Refresh token is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            # Verify and blacklist the old refresh token
+            old_refresh = RefreshToken(refresh_token)
+            old_refresh.blacklist()  # Requires token blacklisting to be enabled
+
+            # Create a new refresh token
+            new_refresh = RefreshToken.for_user(request.user)
+            return Response({"refresh": str(new_refresh)}, status=status.HTTP_200_OK)
+        except TokenError as e:
+            return Response({"message": "Invalid or expired refresh token."}, status=status.HTTP_400_BAD_REQUEST)

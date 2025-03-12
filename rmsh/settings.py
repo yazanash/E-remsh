@@ -166,4 +166,3 @@ EMAIL_HOST_USER = 'yazan.ash.doonaas@gmail.com'
 EMAIL_HOST_PASSWORD = 'lngu fuzi yren vpmr'
 
 AUTH_USER_MODEL = 'customer.User'
-DEFAULT_CHARSET = 'utf-16'
