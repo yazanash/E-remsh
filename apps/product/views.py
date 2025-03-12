@@ -44,7 +44,7 @@ def get_categories(request):
     categories = Category.objects.all()
     print(categories)
     serializer = CategorySerializer(categories, many=True)
-    return JsonResponse({"data": serializer.data}, status=status.HTTP_200_OK)
+    return Response({"data": serializer.data}, status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])
@@ -183,7 +183,7 @@ class ProductView(APIView):
 
     def get(self, request):
         filter_set = ProductFilter(request.GET, queryset=Product.objects.all().order_by('id'))
-        res_page = 1  # items count per page
+        res_page = 10  # items count per page
         paginator = PageNumberPagination()  # pagination
         paginator.page_size = res_page  # set items per page count
         query_set = paginator.paginate_queryset(filter_set.qs, request)
