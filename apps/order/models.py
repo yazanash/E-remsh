@@ -52,6 +52,7 @@ class OrderItems(models.Model):
     has_offer = models.BooleanField(default=False)
     percent = models.IntegerField(default=0)
     total = models.DecimalField(max_digits=10, blank=False, default=0, decimal_places=2)
+    thumbnail = models.ImageField(upload_to='thumbnails/')
 
 
 class Coupon(models.Model):
