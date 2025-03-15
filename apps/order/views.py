@@ -3,16 +3,48 @@ import datetime
 from django.shortcuts import render, get_object_or_404
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+
+from .filters import OrderFilter
 from .models import Order, OrderItems, Coupon, DeliveryOffice
 from datetime import datetime, timezone
 
-from .serializers import OrderSerializer, DeliverySerializer
+from .serializers import OrderSerializer, DeliverySerializer, CouponSerializer
 from ..product.models import Product, ProductItems
 
 
 # Create your views here.
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_all_orders(request):
+    filter_set = OrderFilter(request.GET, queryset=Order.objects.all().order_by('id'))
+    res_page = 10  # items count per page
+    paginator = PageNumberPagination()  # pagination
+    paginator.page_size = res_page  # set items per page count
+    query_set = paginator.paginate_queryset(filter_set.qs, request)
+    serializer = OrderSerializer(query_set, many=True)
+    current_page = paginator.page.number
+    total_pages = paginator.page.paginator.num_pages
+    next_page = current_page + 1 if current_page < total_pages else None
+    previous_page = current_page - 1 if current_page > 1 else None
+    return Response({
+        "data": serializer.data,
+        "current_page": current_page,
+        "total_pages": total_pages,
+        "next_page": next_page,
+        "previous_page": previous_page
+    }, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+def get_order_by_id(request, order_id):
+    order = get_object_or_404(Order, id=order_id)
+    serializer = OrderSerializer(order, many=False, context={'request': request})
+    return Response({"data":  serializer.data}, status=status.HTTP_200_OK)
+
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_orders(request):
@@ -35,7 +67,7 @@ def update_order_status(request, order_id):
     order.status = request.data["status"]
     order.save()
     serializer = OrderSerializer(order, many=False)
-    return Response({"orders": serializer.data}, status=status.HTTP_200_OK)
+    return Response({"data": serializer.data}, status=status.HTTP_200_OK)
 
 
 @api_view(['DELETE'])
@@ -93,9 +125,10 @@ def create_order(request):
             product=product,
             order=order,
             name=product.name,
+            thumbnail=product.thumbnail,
             quantity=item['quantity'],
-            color=product_item.color_code,
-            size=product_item.size_label,
+            color=product_item.color,
+            size=product_item.size,
             price=product.price,
             offer=product.offer,
             has_offer=product.offer != 0,
@@ -106,7 +139,74 @@ def create_order(request):
     if order.coupon is not None:
         order.total = order_total - (order_total * order.coupon.percent / 100)
     order.save()
-    serializer = OrderSerializer(order, many=False)
+    serializer = OrderSerializer(order, many=False,context={'request':request})
     return Response({"order": serializer.data}, status=status.HTTP_201_CREATED)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_coupon(request):
+    data = request.data
+    serializer = CouponSerializer(data=data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response({"data": serializer.data}, status=status.HTTP_201_CREATED)
+    else:
+        return Response({"data": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def edit_coupon(request, coupon_id):
+    data = request.data
+    coupon = Coupon.objects.get(id=coupon_id)
+    serializer = CouponSerializer(coupon, data=data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response({"data": serializer.data}, status=status.HTTP_200_OK)
+    else:
+        return Response({"data": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_coupons(request):
+    coupons = Coupon.objects.all()
+    serializer = CouponSerializer(coupons, many=True)
+    return Response({"data": serializer.data}, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_delivery(request):
+    data = request.data
+    serializer = DeliverySerializer(data=data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response({"data": serializer.data}, status=status.HTTP_201_CREATED)
+    else:
+        return Response({"data": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def edit_delivery(request, coupon_id):
+    data = request.data
+    delivery = DeliveryOffice.objects.get(id=coupon_id)
+    serializer = DeliverySerializer(delivery, data=data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response({"data": serializer.data}, status=status.HTTP_200_OK)
+    else:
+        return Response({"data": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_deliveries(request):
+    deliveries = DeliveryOffice.objects.all()
+    serializer = DeliverySerializer(deliveries, many=True)
+    return Response({"data": serializer.data}, status=status.HTTP_200_OK)
+
 
 

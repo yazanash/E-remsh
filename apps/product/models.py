@@ -32,7 +32,7 @@ class ProductItems(models.Model):
     is_active = models.BooleanField(default=True)
 
     def __str__(self):
-        return f"{self.product.name} - {self.color_code} - {self.size_label}"
+        return f"{self.product.name} - {self.color} - {self.size}"
 
 
 class Like(models.Model):

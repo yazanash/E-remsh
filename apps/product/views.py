@@ -49,6 +49,31 @@ def get_categories(request):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
+def create_category(request):
+    data = request.data
+    serializer = CategorySerializer(data=data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response({"data": serializer.data}, status=status.HTTP_201_CREATED)
+    else:
+        return Response({"data": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def edit_category(request, category_id):
+    data = request.data
+    category = Category.objects.get(id=category_id)
+    serializer = CategorySerializer(category, data=data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response({"data": serializer.data}, status=status.HTTP_200_OK)
+    else:
+        return Response({"data": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def like_product(request, product_id):
     product = Product.objects.get(id=product_id)
     user = request.user
@@ -108,7 +133,7 @@ def get_wishlist(request):
     wishlist_items = WishList.objects.filter(user=user)
     products = [item.product for item in wishlist_items]
     serializer = ProductSerializer(products, many=True, context={'request': request})
-    return Response(serializer.data, status=status.HTTP_200_OK)
+    return Response({"data":serializer.data}, status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])
