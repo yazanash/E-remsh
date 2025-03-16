@@ -35,6 +35,7 @@ class Order(models.Model):
     coupon = models.ForeignKey('Coupon', null=True, blank=True, on_delete=models.SET_NULL)
     total = models.DecimalField(max_digits=10, blank=False, default=0, decimal_places=2)
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.user.profile.name + "-" + self.status

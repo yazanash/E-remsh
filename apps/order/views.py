@@ -1,17 +1,19 @@
-import datetime
 
+from django.db.models import Sum, Count, Value
+from django.db.models.functions import Coalesce
 from django.shortcuts import render, get_object_or_404
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from .filters import OrderFilter
 from .models import Order, OrderItems, Coupon, DeliveryOffice
-from datetime import datetime, timezone
+from datetime import datetime, timezone,timedelta
 
-from .serializers import OrderSerializer, DeliverySerializer, CouponSerializer
+from .serializers import OrderSerializer, DeliverySerializer, CouponSerializer, OrderStatisticsSerializer
 from ..product.models import Product, ProductItems
 
 
@@ -38,6 +40,8 @@ def get_all_orders(request):
     }, status=status.HTTP_200_OK)
 
 
+
+
 @api_view(['GET'])
 def get_order_by_id(request, order_id):
     order = get_object_or_404(Order, id=order_id)
@@ -50,14 +54,14 @@ def get_order_by_id(request, order_id):
 def get_orders(request):
     orders = Order.objects.filter(user=request.user)
     serializer = OrderSerializer(orders, many=True)
-    return Response({"orders": serializer.data}, status=status.HTTP_200_OK)
+    return Response({"data": serializer.data}, status=status.HTTP_200_OK)
 
 
 @api_view(['GET'])
 def get_delivery_offices(request):
     delivery_offices = DeliveryOffice.objects.all()
     serializer = DeliverySerializer(delivery_offices, many=True)
-    return Response({"offices": serializer.data}, status=status.HTTP_200_OK)
+    return Response({"data": serializer.data}, status=status.HTTP_200_OK)
 
 
 @api_view(['PUT'])
@@ -190,9 +194,9 @@ def create_delivery(request):
 
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])
-def edit_delivery(request, coupon_id):
+def edit_delivery(request, delivery_id):
     data = request.data
-    delivery = DeliveryOffice.objects.get(id=coupon_id)
+    delivery = DeliveryOffice.objects.get(id=delivery_id)
     serializer = DeliverySerializer(delivery, data=data)
     if serializer.is_valid():
         serializer.save()
@@ -209,4 +213,46 @@ def get_deliveries(request):
     return Response({"data": serializer.data}, status=status.HTTP_200_OK)
 
 
+class StatisticsAPIView(APIView):
+    def get(self, request):
+        today = datetime.today()
+        first_day_this_month = datetime(today.year, today.month, 1)
+        first_day_last_month = first_day_this_month - timedelta(days=1)
+        first_day_last_month = first_day_last_month.replace(day=1)
 
+        # إعداد البيانات
+        stats_data = {
+            "total_orders": Order.objects.filter(updated_at__gte=first_day_this_month).count(),
+            "total_revenue": Order.objects.filter(
+                updated_at__gte=first_day_this_month
+            ).aggregate(total=Sum("total"))["total"] or 0,
+            "discounted_orders": Order.objects.filter(
+                updated_at__gte=first_day_this_month,
+                coupon__isnull=False
+            ).count(),
+            "total_products": OrderItems.objects.filter(
+                order__status__in=["D", "S", "PR"],
+                order__updated_at__gte=first_day_this_month
+            ).aggregate(total=Sum("quantity"))["total"] or 0,
+            "change_total_orders": Order.objects.filter(
+                updated_at__gte=first_day_this_month
+            ).count() - Order.objects.filter(
+                updated_at__gte=first_day_last_month,
+                updated_at__lt=first_day_this_month
+            ).count(),
+            "change_total_revenue": (Order.objects.filter(
+                updated_at__gte=first_day_this_month
+            ).aggregate(total=Sum("total"))["total"] or 0) - (
+                Order.objects.filter(
+                    updated_at__gte=first_day_last_month,
+                    updated_at__lt=first_day_this_month
+                ).aggregate(total=Sum("total"))["total"] or 0),
+            "orders_by_status": list(Order.objects.filter(
+                updated_at__gte=first_day_this_month
+            ).values("status").annotate(
+                count=Coalesce(Count("id"), Value(0)),
+                total_revenue=Sum("total")
+            ))
+        }
+        serializer = OrderStatisticsSerializer(stats_data)
+        return Response({'data':serializer.data})
