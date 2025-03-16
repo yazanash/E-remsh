@@ -1,12 +1,13 @@
 from django.urls import path
 from . import views
-
+from .views import StatisticsAPIView
 
 urlpatterns = [
     path('orders/create/', views.create_order, name="create_order"),
     path('orders/', views.get_orders, name="get_order"),
     path('orders/get/<str:order_id>/', views.get_order_by_id, name="get_order"),
     path('orders/get-all/', views.get_all_orders, name="get_all_order"),
+    path('stats/', StatisticsAPIView.as_view(), name="get_kanban_order"),
     path('orders/status/<str:order_id>/', views.update_order_status, name="update_order_status"),
     path('orders/delete/<str:order_id>/', views.delete_order, name="delete_order"),
 

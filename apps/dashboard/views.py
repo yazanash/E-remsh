@@ -1,9 +1,14 @@
+from datetime import timedelta
+
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.views import LoginView
+from django.db.models import Sum, Count
+from django.db.models.functions import TruncMonth
 from django.http import HttpResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
+from django.utils.timezone import now
 from django.views.generic.edit import CreateView
 from rest_framework import status
 from rest_framework.response import Response
@@ -13,6 +18,8 @@ from apps.customer.forms import CustomUserCreationForm
 from apps.dashboard.forms import CustomAuthenticationForm, ProductForm
 from .decorators import not_logged_user
 from .serializers import UserSerializer, CustomAuthenticationFormSerializer
+from ..customer.models import Customer
+from ..order.models import OrderItems, Order
 from ..product.models import Product, Category
 
 
@@ -31,11 +38,6 @@ class UserSignUpAPIView(APIView):
             }, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
-# @method_decorator(not_logged_user, name='dispatch')
-# class CustomLoginView(LoginView):
-#     authentication_form = CustomAuthenticationForm
-#     template_name = 'dashboard/auth/login.html'
 
 class CustomLoginAPIView(APIView):
 
@@ -58,24 +60,4 @@ class CustomLoginAPIView(APIView):
 
 
 
-def create_product(request):
-    categories = Category.objects.all()
-    if request.method == 'POST':
-        form = ProductForm(request.POST, request.FILES)
-        if form.is_valid():
-            form.save()
-            return redirect('products_list')
-        else:
-            print(form.errors)
-    else:
-        form = ProductForm()
-    return render(request, 'dashboard/products/add_product.html', {'form': form, 'categories': categories})
 
-
-def list_product(request):
-    products = Product.objects.all()
-    return render(request, 'dashboard/products/product_view.html', {'products': products})
-
-
-def home(request):
-    return render(request,"dashboard/analytics.html")

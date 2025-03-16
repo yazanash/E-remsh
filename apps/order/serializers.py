@@ -42,10 +42,20 @@ class OrderSerializer(serializers.ModelSerializer):
 class DeliverySerializer(serializers.ModelSerializer):
     class Meta:
         model = DeliveryOffice
-        fields = ["id", "office"]
+        fields = ["id", "office", 'name', 'address']
 
 
 class CouponSerializer(serializers.ModelSerializer):
     class Meta:
         model = Coupon
         fields = ["id", 'code', 'percent', 'expire', 'count']
+
+
+class OrderStatisticsSerializer(serializers.Serializer):
+    total_orders = serializers.IntegerField()
+    total_revenue = serializers.DecimalField(max_digits=10, decimal_places=2)
+    discounted_orders = serializers.IntegerField()
+    total_products = serializers.IntegerField()
+    change_total_orders = serializers.IntegerField()
+    change_total_revenue = serializers.DecimalField(max_digits=10, decimal_places=2)
+    orders_by_status = serializers.ListField()
