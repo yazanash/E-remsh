@@ -14,6 +14,7 @@ from .models import Order, OrderItems, Coupon, DeliveryOffice
 from datetime import datetime, timezone,timedelta
 
 from .serializers import OrderSerializer, DeliverySerializer, CouponSerializer, OrderStatisticsSerializer
+from ..customer.models import Customer
 from ..product.models import Product, ProductItems
 
 
@@ -53,7 +54,7 @@ def get_order_by_id(request, order_id):
 @permission_classes([IsAuthenticated])
 def get_orders(request):
     orders = Order.objects.filter(user=request.user)
-    serializer = OrderSerializer(orders, many=True)
+    serializer = OrderSerializer(orders, many=True, context={'request': request})
     return Response({"data": serializer.data}, status=status.HTTP_200_OK)
 
 
@@ -215,6 +216,7 @@ def get_deliveries(request):
 
 class StatisticsAPIView(APIView):
     def get(self, request):
+
         today = datetime.today()
         first_day_this_month = datetime(today.year, today.month, 1)
         first_day_last_month = first_day_this_month - timedelta(days=1)
@@ -223,6 +225,7 @@ class StatisticsAPIView(APIView):
         # إعداد البيانات
         stats_data = {
             "total_orders": Order.objects.filter(updated_at__gte=first_day_this_month).count(),
+            "users_count": Customer.objects.all().count(),
             "total_revenue": Order.objects.filter(
                 updated_at__gte=first_day_this_month
             ).aggregate(total=Sum("total"))["total"] or 0,
@@ -255,4 +258,4 @@ class StatisticsAPIView(APIView):
             ))
         }
         serializer = OrderStatisticsSerializer(stats_data)
-        return Response({'data':serializer.data})
+        return Response({'data': serializer.data})
