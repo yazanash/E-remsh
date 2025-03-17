@@ -1,6 +1,7 @@
 from datetime import timedelta
 
 from django.contrib.auth import login, authenticate
+from django.contrib.auth.models import Group
 from django.contrib.auth.views import LoginView
 from django.db.models import Sum, Count
 from django.db.models.functions import TruncMonth
@@ -11,6 +12,7 @@ from django.utils.decorators import method_decorator
 from django.utils.timezone import now
 from django.views.generic.edit import CreateView
 from rest_framework import status
+from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -18,7 +20,7 @@ from apps.customer.forms import CustomUserCreationForm
 from apps.dashboard.forms import CustomAuthenticationForm, ProductForm
 from .decorators import not_logged_user
 from .serializers import UserSerializer, CustomAuthenticationFormSerializer
-from ..customer.models import Customer
+from ..customer.models import Customer, User
 from ..order.models import OrderItems, Order
 from ..product.models import Product, Category
 
@@ -59,5 +61,13 @@ class CustomLoginAPIView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+@api_view(['GET'])
+def get_admins(request):
+    # Get the "Customer" group
+    customer_group = Group.objects.get(name='customer')
 
+    # Filter users who are not in the "Customer" group
+    users = User.objects.exclude(groups=customer_group)
+
+    return Response({'users': list(users)})
 

@@ -18,6 +18,7 @@ class OrderCustomerSerializer(serializers.ModelSerializer):
 class OrderSerializer(serializers.ModelSerializer):
     order_items = serializers.SerializerMethodField(method_name="get_order_items", read_only=True)
     delivery_office = serializers.SerializerMethodField()
+    coupon = serializers.SerializerMethodField()
     user = OrderCustomerSerializer(source='user.profile')
     order_items_count = serializers.SerializerMethodField()
 
@@ -37,6 +38,9 @@ class OrderSerializer(serializers.ModelSerializer):
     def get_delivery_office(self, obj):
         # Assuming the delivery office model has `name` and `address` fields
         return f"{obj.delivery_office.name}, {obj.delivery_office.address}"
+    def get_coupon(self, obj):
+        # Assuming the delivery office model has `name` and `address` fields
+        return f"{obj.coupon.code} - ({obj.coupon.percent}%)"
 
 
 class DeliverySerializer(serializers.ModelSerializer):
