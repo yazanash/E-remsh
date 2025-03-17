@@ -39,8 +39,8 @@ class OrderSerializer(serializers.ModelSerializer):
         # Assuming the delivery office model has `name` and `address` fields
         return f"{obj.delivery_office.name}, {obj.delivery_office.address}"
     def get_coupon(self, obj):
-        # Assuming the delivery office model has `name` and `address` fields
-        return f"{obj.coupon.code} - ({obj.coupon.percent}%)"
+        if obj.coupon:
+            return f"{obj.coupon.code} - ({obj.coupon.percent}%)"
 
 
 class DeliverySerializer(serializers.ModelSerializer):
