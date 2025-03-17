@@ -1,3 +1,4 @@
+from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import Group
 from django.shortcuts import render, get_object_or_404
 from rest_framework.decorators import api_view
@@ -6,7 +7,8 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.core.mail import send_mail
 from .models import User, OTP, Customer
-from .serializers import UserSerializer, OTPSerializer, CustomerSerializer
+from .serializers import UserSerializer, OTPSerializer, CustomerSerializer, UserDataSerializer, \
+    CustomAuthenticationFormSerializer, UserDashboardSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
 import random
@@ -99,3 +101,56 @@ class RefreshRefreshTokenView(APIView):
         except TokenError as e:
             return Response({"message": "Invalid or expired refresh token."}, status=status.HTTP_400_BAD_REQUEST)
 
+
+# Create your views here.
+class UserSignUpAPIView(APIView):
+    def post(self, request, *args, **kwargs):
+        serializer = UserDashboardSerializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.save()
+            login(request, user)
+            refresh = RefreshToken.for_user(user)
+            return Response({
+                "message": "User created and logged in successfully",
+                "access": str(refresh.access_token),
+                "refresh": str(refresh),
+                "user": UserDataSerializer(user, many=False)
+            }, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class CustomLoginAPIView(APIView):
+
+    def post(self, request, *args, **kwargs):
+        serializer = CustomAuthenticationFormSerializer(data=request.data)
+        if serializer.is_valid():
+            email = serializer.validated_data['email']
+            password = serializer.validated_data['password']
+            user = authenticate(request, username=email, password=password)
+            if user is not None:
+                login(request, user)
+                refresh = RefreshToken.for_user(user)
+                return Response({
+                    "message": "User logged in successfully",
+                    "access": str(refresh.access_token),
+                    "refresh": str(refresh),
+                    "user": UserDataSerializer(user, many=False)
+                }, status=status.HTTP_200_OK)
+            return Response({"error": "Invalid email or password"}, status=status.HTTP_401_UNAUTHORIZED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET'])
+def get_admins(request):
+    # Get the "Customer" group
+    customer_group = Group.objects.get(name='customer')
+    # Filter users who are not in the "Customer" group
+    users = User.objects.exclude(groups=customer_group)
+    serializer = UserDataSerializer(users, many=True)
+    return Response({'data': serializer.data})
+
+
+@api_view(['GET'])
+def get_user_group(request):
+    serializer = UserDataSerializer(request.user, many=False)
+    return Response({'data': serializer.data})

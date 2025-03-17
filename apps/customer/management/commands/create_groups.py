@@ -1,6 +1,9 @@
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import Group
 
+from apps.customer.models import User
+
+
 class Command(BaseCommand):
     help = 'Create required user groups'
 
@@ -13,3 +16,9 @@ class Command(BaseCommand):
                 self.stdout.write(f"Group '{group_name}' created.")
             else:
                 self.stdout.write(f"Group '{group_name}' already exists.")
+
+        customer_group, _ = Group.objects.get_or_create(name='customer')
+        users_without_group = User.objects.filter(groups=None)
+
+        for user in users_without_group:
+            user.groups.add(customer_group)
