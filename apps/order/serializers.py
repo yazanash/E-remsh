@@ -59,3 +59,4 @@ class OrderStatisticsSerializer(serializers.Serializer):
     change_total_orders = serializers.IntegerField()
     change_total_revenue = serializers.DecimalField(max_digits=10, decimal_places=2)
     orders_by_status = serializers.ListField()
+    users_count = serializers.IntegerField()
