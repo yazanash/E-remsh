@@ -36,6 +36,7 @@ class Order(models.Model):
     total = models.DecimalField(max_digits=10, blank=False, default=0, decimal_places=2)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    message = models.CharField(max_length=100,null=False,default="")
 
     def __str__(self):
         return self.user.profile.name + "-" + self.status

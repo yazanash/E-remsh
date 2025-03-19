@@ -1,6 +1,5 @@
 from django.urls import path
-from .views import SendOTPView, VerifyOTPView, UserProfileView, RefreshRefreshTokenView, UserSignUpAPIView, \
-    CustomLoginAPIView, get_admins, get_user_group
+from .views import *
 from rest_framework_simplejwt.views import (
     TokenRefreshView,
     TokenVerifyView,
@@ -18,4 +17,9 @@ urlpatterns = [
     path('login/', CustomLoginAPIView.as_view(), name='login'),
     path('get-admins/', get_admins, name='get_users'),
     path('user-group/', get_user_group, name='get_user_group'),
+
+    path('admins/add/', add_user_to_admins, name='add_admin'),
+    path('admins/change/<str:user_id>/', change_user_group, name='change_user_group'),
+    path('admins/remove/<str:user_id>/', remove_user_from_admins, name='remove_user_group'),
+
 ]
