@@ -56,7 +56,7 @@ class UserDataSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['email', 'group', 'name']  # Specify the fields to return
+        fields = ['id','email', 'group', 'name']  # Specify the fields to return
 
     def get_group(self, obj):
         # Ensure only one group is returned (assuming the user has only one group)

@@ -40,8 +40,15 @@ class OTP(models.Model):
 
 
 class Customer(models.Model):
+    Male = 'Male'
+    Female = 'Female'
+
+    GENDER_CHOICES = [
+        (Male, 'Male'),
+        (Female, 'Female'),
+    ]
     name = models.CharField(max_length=100)
-    gender = models.CharField(max_length=10)
+    gender = models.CharField(max_length=9, choices=GENDER_CHOICES, default=Male)
     phone = models.CharField(max_length=20)
     birthdate = models.CharField(max_length=100)
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')

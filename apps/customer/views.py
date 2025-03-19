@@ -45,6 +45,8 @@ class VerifyOTPView(APIView):
                 if serializer.is_valid():
                     user = serializer.save()
                     refresh = RefreshToken.for_user(user)
+                    customer_group, _ = Group.objects.get_or_create(name='customer')
+                    user.groups.add(customer_group)
                     return Response({
                         'message': 'User registered',
                         'refresh': str(refresh),
@@ -110,11 +112,12 @@ class UserSignUpAPIView(APIView):
             user = serializer.save()
             login(request, user)
             refresh = RefreshToken.for_user(user)
+            user_serializer = UserDataSerializer(user, many=False)
             return Response({
                 "message": "User created and logged in successfully",
                 "access": str(refresh.access_token),
                 "refresh": str(refresh),
-                "user": UserDataSerializer(user, many=False)
+                "user": user_serializer.data
             }, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -130,11 +133,12 @@ class CustomLoginAPIView(APIView):
             if user is not None:
                 login(request, user)
                 refresh = RefreshToken.for_user(user)
+                user_serializer=UserDataSerializer(user, many=False)
                 return Response({
                     "message": "User logged in successfully",
                     "access": str(refresh.access_token),
                     "refresh": str(refresh),
-                    "user": UserDataSerializer(user, many=False)
+                    "user": user_serializer.data
                 }, status=status.HTTP_200_OK)
             return Response({"error": "Invalid email or password"}, status=status.HTTP_401_UNAUTHORIZED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -154,3 +158,66 @@ def get_admins(request):
 def get_user_group(request):
     serializer = UserDataSerializer(request.user, many=False)
     return Response({'data': serializer.data})
+
+
+@api_view(['POST'])
+def add_user_to_admins(request):
+    try:
+        email = request.data['email']
+        group_name = request.data['group']
+        if not email or not group_name:
+            return Response({'error': 'Email and group name are required.'}, status=status.HTTP_400_BAD_REQUEST)
+        # Get user by email
+        user = User.objects.get(email=email)
+        # Get or create the group
+        group = Group.objects.get(name=group_name)
+        # Clear user's current groups and assign the new one
+        user.groups.clear()
+        user.groups.add(group)
+        serializer = UserDataSerializer(user, many=False)
+        return Response({'data': serializer.data}, status=status.HTTP_200_OK)
+    except User.DoesNotExist:
+        return Response({'error': 'User not found.'}, status=status.HTTP_404_NOT_FOUND)
+    except Group.DoesNotExist:
+        return Response({'error': 'Group not found.'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        print(e)
+
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['PUT'])
+def change_user_group(request,user_id):
+    try:
+        group_name = request.data['group']
+        if not group_name:
+            return Response({'error': 'Email and group name are required.'}, status=status.HTTP_400_BAD_REQUEST)
+        # Get user by email
+        user = User.objects.get(id=user_id)
+        # Get or create the group
+        group = Group.objects.get(name=group_name)
+        # Clear user's current groups and assign the new one
+        user.groups.clear()
+        user.groups.add(group)
+        serializer = UserDataSerializer(user, many=False)
+        return Response({'data': serializer}, status=status.HTTP_200_OK)
+    except User.DoesNotExist:
+        return Response({'error': 'User not found.'}, status=status.HTTP_404_NOT_FOUND)
+    except Group.DoesNotExist:
+        return Response({'error': 'Group not found.'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        print(e)
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+
+@api_view(['DELETE'])
+def remove_user_from_admins(request,user_id):
+    try:
+        user = User.objects.get(id=user_id)
+        user.groups.clear()
+        return Response({'message': "removed successfully"}, status=status.HTTP_204_NO_CONTENT)
+    except User.DoesNotExist:
+        return Response({'error': 'User not found.'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
