@@ -72,7 +72,7 @@ class UserProfileView(APIView):
         serializer = CustomerSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save(user=request.user)
-            return Response({'message': 'Profile created'}, status=status.HTTP_201_CREATED)
+            return Response({'data': serializer.data}, status=status.HTTP_201_CREATED)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -81,6 +81,16 @@ class UserProfileView(APIView):
         customer = get_object_or_404(Customer, user=user)
         serializer = CustomerSerializer(customer,many=False)
         return Response({"data": serializer.data}, status=status.HTTP_200_OK)
+
+    def put(self, request):
+        user = request.user
+        customer = get_object_or_404(Customer, user=user)
+        serializer = CustomerSerializer(customer,data=request.data)
+        if serializer.is_valid():
+            serializer.save(user=request.user)
+            return Response({'data': serializer.data}, status=status.HTTP_200_OK)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class RefreshRefreshTokenView(APIView):

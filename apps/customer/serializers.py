@@ -1,3 +1,5 @@
+import datetime
+
 from rest_framework import serializers
 from .models import User, OTP, Customer
 
@@ -36,7 +38,8 @@ class UserDashboardSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data.pop('password2')
         if not validated_data.get('username'):
-            validated_data['username'] = validated_data['email'].split('@')[0]
+            timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+            validated_data['username'] = f"{validated_data['email'].split('@')[0]}-{timestamp}"
         user = User.objects.create_user(
             username=validated_data['username'],
             email=validated_data['email'],
