@@ -1,3 +1,4 @@
+import datetime
 import random
 import string
 
@@ -23,7 +24,8 @@ class User(AbstractUser):
 
     def save(self, *args, **kwargs):
         if not self.username:
-            self.username = self.email.split('@')[0]
+            timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+            self.username = f"{self.email.split('@')[0]}-{timestamp}"
         if not self.password:
             self.set_password(''.join(random.choices(string.ascii_letters + string.digits, k=8)))
         super().save(*args, **kwargs)

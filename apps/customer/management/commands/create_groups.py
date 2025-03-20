@@ -17,7 +17,7 @@ class Command(BaseCommand):
             else:
                 self.stdout.write(f"Group '{group_name}' already exists.")
 
-        customer_group, _ = Group.objects.get_or_create(name='customer')
+        customer_group, _ = Group.objects.get_or_create(name='admin')
         users_without_group = User.objects.filter(groups=None)
 
         for user in users_without_group:
