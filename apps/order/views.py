@@ -70,6 +70,7 @@ def get_delivery_offices(request):
 def update_order_status(request, order_id):
     order = Order.objects.get(id=order_id)
     order.status = request.data["status"]
+    order.message = request.data["message"]
     order.save()
     serializer = OrderSerializer(order, many=False)
     return Response({"data": serializer.data}, status=status.HTTP_200_OK)
