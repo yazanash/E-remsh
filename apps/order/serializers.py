@@ -24,7 +24,7 @@ class OrderSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Order
-        fields = ['id', 'coupon', 'created_at',
+        fields = ['id', 'coupon', 'created_at', 'message',
                   'delivery_office', 'order_items', 'order_items_count', 'status', 'total', 'user']
 
     def get_order_items(self, obj):
