@@ -55,6 +55,8 @@ class VerifyOTPView(APIView):
                 else:
                     return Response({'message': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
             else:
+                exist_user.device_token = request.data['device_token']
+                exist_user.save()
                 refresh = RefreshToken.for_user(exist_user)
                 return Response({
                     'message': 'User registered',
@@ -109,6 +111,9 @@ class RefreshRefreshTokenView(APIView):
 
             # Create a new refresh token
             new_refresh = RefreshToken.for_user(request.user)
+            user = request.user
+            user.device_token = request.data['device_token']
+            user.save()
             return Response({"refresh": str(new_refresh)}, status=status.HTTP_200_OK)
         except TokenError as e:
             return Response({"message": "Invalid or expired refresh token."}, status=status.HTTP_400_BAD_REQUEST)

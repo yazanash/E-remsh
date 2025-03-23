@@ -7,7 +7,7 @@ from .models import User, OTP, Customer
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['email']
+        fields = ['email', 'device_token']
 
 
 class OTPSerializer(serializers.ModelSerializer):
