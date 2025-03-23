@@ -8,6 +8,7 @@ class Command(BaseCommand):
     help = 'Create required user groups'
 
     def handle(self, *args, **kwargs):
+
         group_names = ['admin', 'supervisor', 'data_entry', 'customer']
         # Group.objects.deleteAll()
         for group_name in group_names:
