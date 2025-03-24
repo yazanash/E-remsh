@@ -166,5 +166,3 @@ EMAIL_HOST_PASSWORD = 'lngu fuzi yren vpmr'
 
 AUTH_USER_MODEL = 'customer.User'
 
-TIME_ZONE = "UTC"
-USE_TZ = True
