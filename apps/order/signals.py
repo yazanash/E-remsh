@@ -1,7 +1,7 @@
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from .models import Order
-from ..customer.firebase_utils import send_push_notification
+from ..customer.firebase_utils import send_fcm_v1_notification
 
 
 @receiver(post_save, sender=Order)
@@ -29,4 +29,4 @@ def send_order_notification(sender, instance, created, **kwargs):
 
             # Send the notification
             if user_device_token:
-                send_push_notification(user_device_token, message_title, message_body)
+                send_fcm_v1_notification(user_device_token, message_title, message_body)

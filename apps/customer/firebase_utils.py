@@ -44,7 +44,6 @@ load_dotenv()
 from google.oauth2.service_account import Credentials
 from google.auth.transport.requests import Request
 
-print(os.getenv("project_id"))
 def create_credentials_from_env():
 
     private_key = os.getenv("private_key").replace("\\n", "\n")
