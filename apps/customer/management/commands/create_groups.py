@@ -1,6 +1,7 @@
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import Group
 
+from apps.customer.firebase_utils import send_fcm_v1_notification
 from apps.customer.models import User
 
 

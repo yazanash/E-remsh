@@ -11,6 +11,7 @@ from django.contrib.auth.models import AbstractUser, Group, Permission
 
 class User(AbstractUser):
     email = models.EmailField(unique=True)
+    device_token = models.CharField(max_length=255, blank=True, null=True)
     groups = models.ManyToManyField(
         Group,
         related_name='user_groups'  # Unique related_name for your custom model
