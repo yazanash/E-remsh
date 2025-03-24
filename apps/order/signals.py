@@ -28,4 +28,5 @@ def send_order_notification(sender, instance, created, **kwargs):
             user_device_token = instance.user.device_token  # Ensure device tokens are stored in the User model
 
             # Send the notification
-            send_push_notification(user_device_token, message_title, message_body)
+            if user_device_token:
+                send_push_notification(user_device_token, message_title, message_body)

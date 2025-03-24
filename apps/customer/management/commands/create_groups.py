@@ -1,6 +1,7 @@
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import Group
 
+from apps.customer.firebase_utils import send_fcm_v1_notification
 from apps.customer.models import User
 
 
@@ -8,7 +9,6 @@ class Command(BaseCommand):
     help = 'Create required user groups'
 
     def handle(self, *args, **kwargs):
-
         group_names = ['admin', 'supervisor', 'data_entry', 'customer']
         # Group.objects.deleteAll()
         for group_name in group_names:
