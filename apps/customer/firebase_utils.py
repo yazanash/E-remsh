@@ -90,4 +90,4 @@ def send_fcm_v1_notification(token, title, body):
 
     # Make the HTTP request
     response = requests.post(url, headers=headers, data=json.dumps(payload))
-    print( response.json())
+    print(response.json())
