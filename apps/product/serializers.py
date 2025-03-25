@@ -41,7 +41,7 @@ class ProductSerializer(serializers.ModelSerializer):
 class ProductItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductItems
-        fields = ['id', 'color', 'size']
+        fields = ['id', 'color', 'size', 'is_active']
 
 
 class ProductImageSerializer(serializers.ModelSerializer):

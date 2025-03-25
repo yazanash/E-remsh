@@ -30,7 +30,7 @@ def get_products(request):
 def get_product_by_id(request, product_id):
     product = get_object_or_404(Product, id=product_id)
     serializer = ProductSerializer(product, many=False, context={'request': request})
-    product_items = ProductItems.objects.filter(product=product)
+    product_items = ProductItems.objects.filter(product=product,is_active=True)
     items_serializer = ProductItemSerializer(product_items, many=True)
     product_images = Image.objects.filter(product=product)
     images_serializer = ProductImageSerializer(product_images, many=True, context={'request': request})
@@ -184,6 +184,16 @@ def add_item(request,product_id):
     else:
         print(serializer.errors)
         return Response({"message": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def change_item_status(request, item_id):
+    data = request.data
+    item = get_object_or_404(ProductItems, id=item_id)
+    item.is_active = data['status']
+    item.save()
+    return Response({"data": {"id": item.id,"status":item.is_active}}, status=status.HTTP_200_OK)
 
 
 @api_view(['DELETE'])

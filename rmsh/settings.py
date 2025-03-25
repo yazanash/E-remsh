@@ -31,6 +31,10 @@ ALLOWED_HOSTS = [
     '127.0.0.1',
     '.vercel.app'
 ]
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "https://remsh-web-app.vercel.app"
+]
 
 # Application definition
 
@@ -45,6 +49,7 @@ INSTALLED_APPS = [
     'apps.order',
     'apps.product',
     'django_filters',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
@@ -55,8 +60,10 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
 ]
-
+CORS_ALLOW_ALL_ORIGINS = True
 ROOT_URLCONF = 'rmsh.urls'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/login/'

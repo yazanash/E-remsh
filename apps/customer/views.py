@@ -215,7 +215,7 @@ def change_user_group(request,user_id):
         user.groups.clear()
         user.groups.add(group)
         serializer = UserDataSerializer(user, many=False)
-        return Response({'data': serializer}, status=status.HTTP_200_OK)
+        return Response({'data': serializer.data}, status=status.HTTP_200_OK)
     except User.DoesNotExist:
         return Response({'error': 'User not found.'}, status=status.HTTP_404_NOT_FOUND)
     except Group.DoesNotExist:
@@ -230,7 +230,9 @@ def change_user_group(request,user_id):
 def remove_user_from_admins(request,user_id):
     try:
         user = User.objects.get(id=user_id)
+        group = Group.objects.get(name="customer")
         user.groups.clear()
+        user.groups.add(group)
         return Response({'message': "removed successfully"}, status=status.HTTP_204_NO_CONTENT)
     except User.DoesNotExist:
         return Response({'error': 'User not found.'}, status=status.HTTP_404_NOT_FOUND)
