@@ -11,6 +11,8 @@ from .serializers import ProductSerializer, CategorySerializer, ProductItemSeria
 from .filters import ProductFilter
 from rest_framework.pagination import PageNumberPagination
 
+from ..customer.decorators import group_required
+
 
 # Create your views here.
 
@@ -42,13 +44,13 @@ def get_product_by_id(request, product_id):
 @api_view(['GET'])
 def get_categories(request):
     categories = Category.objects.all()
-    print(categories)
     serializer = CategorySerializer(categories, many=True)
     return Response({"data": serializer.data}, status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
+@group_required('admin', 'supervisor')
 def create_category(request):
     data = request.data
     serializer = CategorySerializer(data=data)
@@ -61,6 +63,7 @@ def create_category(request):
 
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])
+@group_required('admin', 'supervisor')
 def edit_category(request, category_id):
     data = request.data
     category = Category.objects.get(id=category_id)
@@ -138,6 +141,7 @@ def get_wishlist(request):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
+@group_required('admin', 'data_entry', 'supervisor')
 def add_image(request):
     data = request.data
     product = get_object_or_404(Product,id=data['product'])
@@ -152,6 +156,7 @@ def add_image(request):
 
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])
+@group_required('admin', 'data_entry', 'supervisor')
 def edit_image(request,image_id):
     data = request.data
     image = get_object_or_404(Image, id=image_id)
@@ -166,6 +171,7 @@ def edit_image(request,image_id):
 
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
+@group_required('admin', 'data_entry', 'supervisor')
 def delete_image(request, image_id):
     image = get_object_or_404(Image, id=image_id)
     image.delete()
@@ -173,6 +179,7 @@ def delete_image(request, image_id):
 
 
 @api_view(['POST'])
+@group_required('admin', 'data_entry', 'supervisor')
 @permission_classes([IsAuthenticated])
 def add_item(request,product_id):
     data = request.data
@@ -188,6 +195,7 @@ def add_item(request,product_id):
 
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])
+@group_required('admin', 'data_entry', 'supervisor')
 def change_item_status(request, item_id):
     data = request.data
     item = get_object_or_404(ProductItems, id=item_id)
@@ -198,6 +206,7 @@ def change_item_status(request, item_id):
 
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
+@group_required('admin', 'data_entry', 'supervisor')
 def delete_item(request, item_id):
     item = get_object_or_404(ProductItems, id=item_id)
     item.delete()
@@ -237,20 +246,23 @@ class ProductView(APIView):
 
     def post(self, request):
         # Handle product creation
-        data = request.data
-        serializer = ProductSerializer(data=data)
-        category_id = data.get('category')
-        category = Category.objects.get(id=category_id)
-        if serializer.is_valid():
-            product = serializer.save(category=category)
-            res = ProductSerializer(product, many=False, context={'request': request})
-            return Response({"data": res.data}, status=status.HTTP_200_OK)
-        else:
-            return Response({"message": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+        @group_required('admin', 'data_entry', 'supervisor')
+        def protected():
+            data = request.data
+            serializer = ProductSerializer(data=data)
+            category_id = data.get('category')
+            category = Category.objects.get(id=category_id)
+            if serializer.is_valid():
+                product = serializer.save(category=category)
+                res = ProductSerializer(product, many=False, context={'request': request})
+                return Response({"data": res.data}, status=status.HTTP_200_OK)
+            else:
+                return Response({"message": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])
+@group_required('admin', 'data_entry', 'supervisor')
 def edit_product(request,product_id):
     data = request.data
     product = get_object_or_404(Product, id=product_id)

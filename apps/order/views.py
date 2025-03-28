@@ -2,6 +2,7 @@
 from django.db.models import Sum, Count, Value
 from django.db.models.functions import Coalesce
 from django.shortcuts import render, get_object_or_404
+from django.utils.decorators import method_decorator
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.pagination import PageNumberPagination
@@ -14,6 +15,7 @@ from .models import Order, OrderItems, Coupon, DeliveryOffice
 from datetime import datetime, timezone,timedelta
 
 from .serializers import OrderSerializer, DeliverySerializer, CouponSerializer, OrderStatisticsSerializer
+from ..customer.decorators import group_required
 from ..customer.models import Customer
 from ..product.models import Product, ProductItems
 
@@ -21,6 +23,7 @@ from ..product.models import Product, ProductItems
 # Create your views here.
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
+@group_required('admin', 'data_entry', 'supervisor')
 def get_all_orders(request):
     filter_set = OrderFilter(request.GET, queryset=Order.objects.all().order_by('id'))
     res_page = 10  # items count per page
@@ -41,9 +44,9 @@ def get_all_orders(request):
     }, status=status.HTTP_200_OK)
 
 
-
-
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
+@group_required('admin', 'data_entry', 'supervisor','customer')
 def get_order_by_id(request, order_id):
     order = get_object_or_404(Order, id=order_id)
     serializer = OrderSerializer(order, many=False, context={'request': request})
@@ -67,6 +70,7 @@ def get_delivery_offices(request):
 
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])
+@group_required('admin', 'data_entry', 'supervisor')
 def update_order_status(request, order_id):
     order = Order.objects.get(id=order_id)
     order.status = request.data["status"]
@@ -151,6 +155,7 @@ def create_order(request):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
+@group_required('admin', 'supervisor')
 def create_coupon(request):
     data = request.data
     serializer = CouponSerializer(data=data)
@@ -163,6 +168,7 @@ def create_coupon(request):
 
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])
+@group_required('admin', 'supervisor')
 def edit_coupon(request, coupon_id):
     data = request.data
     coupon = Coupon.objects.get(id=coupon_id)
@@ -176,6 +182,7 @@ def edit_coupon(request, coupon_id):
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
+@group_required('admin', 'supervisor')
 def get_coupons(request):
     coupons = Coupon.objects.all()
     serializer = CouponSerializer(coupons, many=True)
@@ -184,6 +191,7 @@ def get_coupons(request):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
+@group_required('admin', 'supervisor')
 def create_delivery(request):
     data = request.data
     serializer = DeliverySerializer(data=data)
@@ -196,6 +204,7 @@ def create_delivery(request):
 
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])
+@group_required('admin', 'supervisor')
 def edit_delivery(request, delivery_id):
     data = request.data
     delivery = DeliveryOffice.objects.get(id=delivery_id)
@@ -209,12 +218,14 @@ def edit_delivery(request, delivery_id):
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
+@group_required('admin', 'data_entry', 'supervisor','customer')
 def get_deliveries(request):
     deliveries = DeliveryOffice.objects.all()
     serializer = DeliverySerializer(deliveries, many=True)
     return Response({"data": serializer.data}, status=status.HTTP_200_OK)
 
 
+@method_decorator(group_required('admin'), name='dispatch')
 class StatisticsAPIView(APIView):
     def get(self, request):
 
