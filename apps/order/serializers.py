@@ -1,3 +1,4 @@
+from django.db import models
 from rest_framework import serializers
 from .models import Order, OrderItems, DeliveryOffice, Coupon
 from ..customer.models import Customer
@@ -50,9 +51,20 @@ class DeliverySerializer(serializers.ModelSerializer):
 
 
 class CouponSerializer(serializers.ModelSerializer):
+    orders_count = serializers.SerializerMethodField()  # Custom field for count
+    orders_total_sum = serializers.SerializerMethodField()  # Custom field for sum
+
     class Meta:
         model = Coupon
-        fields = ["id", 'code', 'percent', 'expire', 'count']
+        fields = ["id", 'code', 'percent', 'expire', 'count','orders_count', 'orders_total_sum']
+
+    def get_orders_count(self, obj):
+        # Count the number of orders using the coupon
+        return Order.objects.filter(coupon=obj).count()
+
+    def get_orders_total_sum(self, obj):
+        # Sum the total price of orders using the coupon
+        return Order.objects.filter(coupon=obj).aggregate(total_sum=models.Sum('total'))['total']
 
 
 class OrderStatisticsSerializer(serializers.Serializer):
