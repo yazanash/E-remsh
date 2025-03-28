@@ -6,6 +6,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from django.core.mail import send_mail
+
+from .decorators import group_required
 from .models import User, OTP, Customer
 from .serializers import UserSerializer, OTPSerializer, CustomerSerializer, UserDataSerializer, \
     CustomAuthenticationFormSerializer, UserDashboardSerializer
@@ -160,6 +162,7 @@ class CustomLoginAPIView(APIView):
 
 
 @api_view(['GET'])
+@group_required('admin')
 def get_admins(request):
     # Get the "Customer" group
     customer_group = Group.objects.get(name='customer')
@@ -176,6 +179,7 @@ def get_user_group(request):
 
 
 @api_view(['POST'])
+@group_required('admin')
 def add_user_to_admins(request):
     try:
         email = request.data['email']
@@ -202,6 +206,7 @@ def add_user_to_admins(request):
 
 
 @api_view(['PUT'])
+@group_required('admin')
 def change_user_group(request,user_id):
     try:
         group_name = request.data['group']
@@ -225,9 +230,9 @@ def change_user_group(request,user_id):
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-
 @api_view(['DELETE'])
-def remove_user_from_admins(request,user_id):
+@group_required('admin')
+def remove_user_from_admins(request, user_id):
     try:
         user = User.objects.get(id=user_id)
         group = Group.objects.get(name="customer")
